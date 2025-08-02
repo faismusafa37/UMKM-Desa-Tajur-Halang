@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Images - UMKM Catalog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .image-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .download-btn {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .download-btn:hover {
+            background: #5a67d8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Images untuk UMKM Catalog</h1>
+    <p>Klik tombol di bawah untuk download gambar contoh:</p>
+    
+    <div class="image-container">
+        <h3>Warung Makan</h3>
+        <img src="https://via.placeholder.com/400x300/f0f0f0/666666?text=Warung+Makan" alt="Warung Makan">
+        <br>
+        <button class="download-btn" onclick="downloadImage('warung1.jpg', 'https://via.placeholder.com/400x300/f0f0f0/666666?text=Warung+Makan')">Download warung1.jpg</button>
+        <button class="download-btn" onclick="downloadImage('warung2.jpg', 'https://via.placeholder.com/400x300/f0f0f0/666666?text=Makanan')">Download warung2.jpg</button>
+        <button class="download-btn" onclick="downloadImage('warung3.jpg', 'https://via.placeholder.com/400x300/f0f0f0/666666?text=Interior')">Download warung3.jpg</button>
+    </div>
+    
+    <div class="image-container">
+        <h3>Toko Kelontong</h3>
+        <img src="https://via.placeholder.com/400x300/f0f0f0/666666?text=Toko+Kelontong" alt="Toko Kelontong">
+        <br>
+        <button class="download-btn" onclick="downloadImage('toko1.jpg', 'https://via.placeholder.com/400x300/f0f0f0/666666?text=Toko+Kelontong')">Download toko1.jpg</button>
+        <button class="download-btn" onclick="downloadImage('toko2.jpg', 'https://via.placeholder.com/400x300/f0f0f0/666666?text=Produk')">Download toko2.jpg</button>
+    </div>
+
+    <script>
+        function downloadImage(filename, url) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html> 
