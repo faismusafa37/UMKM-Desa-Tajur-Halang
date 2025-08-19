@@ -17,40 +17,31 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
-// In-memory storage untuk demo (dalam produksi gunakan database)
-let umkmData = [
-  {
-    id: 1,
-    namaUsaha: "Warung Makan Sederhana",
-    deskripsi: "Warung makan dengan masakan tradisional yang lezat dan terjangkau",
-    jamOperasional: "06:00 - 22:00",
-    dapatDiAntar: true,
-    dapatBayarQris: true,
-    gambar: ["warung1.svg", "warung2.svg", "warung3.svg"],
-    whatsapp: "6281234567890",
-    mapsLink: "https://goo.gl/maps/abc123"
-  },
-  {
-    id: 2,
-    namaUsaha: "Toko Kelontong Makmur",
-    deskripsi: "Toko kelontong lengkap dengan berbagai kebutuhan sehari-hari",
-    jamOperasional: "07:00 - 21:00",
-    dapatDiAntar: true,
-    dapatBayarQris: true,
-    gambar: ["toko1.svg", "toko2.svg"],
-    whatsapp: "6289876543210",
-    mapsLink: "https://goo.gl/maps/xyz456"
-  }
-];
+// Database connection
+const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-// Banner data
-let bannerData = {
-  heroTitle: "Jelajahi UMKM Tajur Halang",
-  heroDescription: "Temukan berbagai usaha mikro, kecil, dan menengah yang berkualitas di sekitar Anda",
-  heroButtonText: "Lihat Catalog",
-  heroImage: "hero-banner.svg"
+// Test database connection
+const testConnection = async () => {
+  try {
+    const connection = await db.getConnection();
+    console.log('✅ Database connected successfully!');
+    connection.release();
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+  }
 };
 
+testConnection();
+
+// Admin credentials
 let adminCredentials = {
   username: "admin",
   password: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi" // password: password
@@ -69,45 +60,70 @@ const storage = multer.diskStorage({
   }
 });
 
+const fileFilter = (req, file, cb) => {
+  // Accept images and SVG files
+  if (file.mimetype.startsWith('image/') || file.mimetype === 'image/svg+xml') {
+    cb(null, true);
+  } else {
+    cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+  }
+};
+
 const upload = multer({ 
   storage: storage,
-  fileFilter: (req, file, cb) => {
-    // Accept images and SVG files
-    if (file.mimetype.startsWith('image/') || file.mimetype === 'image/svg+xml') {
-      cb(null, true);
-    } else {
-      cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
-    }
-  }
+  fileFilter: fileFilter
 });
 
-// Database connection
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-});
+// Define uploadMultiple middleware for handling multiple files
+const uploadMultiple = upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'image2', maxCount: 1 },
+  { name: 'image3', maxCount: 1 },
+  { name: 'image4', maxCount: 1 }
+]);
 
 // Routes
 
 // Get semua data UMKM
-app.get('/api/umkm', (req, res) => {
-  res.json(umkmData);
+app.get('/api/mysql/umkm', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM umkm ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching UMKM:', error);
+    res.status(500).json({ message: 'Error fetching UMKM data' });
+  }
 });
 
 // Get data UMKM by ID
-app.get('/api/umkm/:id', (req, res) => {
-  const umkm = umkmData.find(u => u.id === parseInt(req.params.id));
-  if (!umkm) {
-    return res.status(404).json({ message: 'UMKM tidak ditemukan' });
+app.get('/api/mysql/umkm/:id', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM umkm WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'UMKM tidak ditemukan' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching UMKM by ID:', error);
+    res.status(500).json({ message: 'Error fetching UMKM data' });
   }
-  res.json(umkm);
 });
 
 // Get banner data
-app.get('/api/banner', (req, res) => {
-  res.json(bannerData);
+app.get('/api/mysql/banner', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT * FROM banner ORDER BY created_at DESC LIMIT 1');
+    if (rows.length === 0) {
+      return res.json({
+        title: "Jelajahi UMKM Tajur Halang",
+        description: "Temukan berbagai usaha mikro, kecil, dan menengah yang berkualitas di sekitar Anda"
+      });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching banner:', error);
+    res.status(500).json({ message: 'Error fetching banner data' });
+  }
 });
 
 // Admin login
@@ -146,195 +162,204 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Tambah UMKM baru (Admin only)
-app.post('/api/umkm', authenticateToken, upload.array('gambar', 5), (req, res) => {
+app.post('/api/mysql/umkm', authenticateToken, uploadMultiple, async (req, res) => {
   try {
-    const { namaUsaha, deskripsi, jamOperasional, dapatDiAntar, dapatBayarQris, whatsapp, mapsLink } = req.body;
+    const { name, description, hours, can_deliver, can_qris, whatsapp, mapsLink, category, best_seller } = req.body;
+    const files = req.files;
     
-    const gambarFiles = req.files ? req.files.map(file => file.filename) : [];
+    // Validate required fields
+    if (!name || !description) {
+      return res.status(400).json({ 
+        message: 'Nama dan deskripsi UMKM harus diisi' 
+      });
+    }
+    
+    // Convert boolean values to integers for MySQL
+    const canDeliver = can_deliver === 'true' || can_deliver === true ? 1 : 0;
+    const canQris = can_qris === 'true' || can_qris === true ? 1 : 0;
+    const bestSeller = best_seller === 'true' || best_seller === true ? 1 : 0;
+    const categoryValue = category === 'IKM' ? 'IKM' : 'UMKM';
+    
+    // Get uploaded files
+    const imageFile = files.image ? files.image[0].filename : null;
+    const image2File = files.image2 ? files.image2[0].filename : null;
+    const image3File = files.image3 ? files.image3[0].filename : null;
+    const image4File = files.image4 ? files.image4[0].filename : null;
+    
+    const [result] = await db.execute(
+      'INSERT INTO umkm (name, description, hours, can_deliver, can_qris, image, image2, image3, image4, whatsapp, mapsLink, category, best_seller) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, description, hours, canDeliver, canQris, imageFile, image2File, image3File, image4File, whatsapp, mapsLink, categoryValue, bestSeller]
+    );
     
     const newUmkm = {
-      id: umkmData.length + 1,
-      namaUsaha,
-      deskripsi,
-      jamOperasional,
-      dapatDiAntar: dapatDiAntar === 'true',
-      dapatBayarQris: dapatBayarQris === 'true',
-      gambar: gambarFiles,
+      id: result.insertId,
+      name,
+      description,
+      hours,
+      can_deliver: canDeliver,
+      can_qris: canQris,
+      image: imageFile,
+      image2: image2File,
+      image3: image3File,
+      image4: image4File,
       whatsapp,
-      mapsLink
+      mapsLink,
+      category: categoryValue,
+      best_seller: bestSeller
     };
     
-    umkmData.push(newUmkm);
     res.status(201).json(newUmkm);
   } catch (error) {
-    res.status(500).json({ message: 'Error menambah UMKM', error: error.message });
+    console.error('❌ Error adding UMKM:', error);
+    res.status(500).json({ 
+      message: 'Error adding UMKM',
+      error: error.message 
+    });
   }
 });
 
 // Update UMKM (Admin only)
-app.put('/api/umkm/:id', authenticateToken, upload.array('gambar', 5), (req, res) => {
-  const umkmIndex = umkmData.findIndex(u => u.id === parseInt(req.params.id));
-  
-  if (umkmIndex === -1) {
-    return res.status(404).json({ message: 'UMKM tidak ditemukan' });
+app.put('/api/mysql/umkm/:id', authenticateToken, uploadMultiple, async (req, res) => {
+  try {
+    const { name, description, hours, can_deliver, can_qris, whatsapp, mapsLink, category, best_seller } = req.body;
+    const files = req.files;
+    
+    // Convert boolean values to integers for MySQL
+    const canDeliver = can_deliver === 'true' || can_deliver === true ? 1 : 0;
+    const canQris = can_qris === 'true' || can_qris === true ? 1 : 0;
+    const bestSeller = best_seller === 'true' || best_seller === true ? 1 : 0;
+    const categoryValue = category === 'IKM' ? 'IKM' : 'UMKM';
+    
+    // Get uploaded files
+    const imageFile = files.image ? files.image[0].filename : null;
+    const image2File = files.image2 ? files.image2[0].filename : null;
+    const image3File = files.image3 ? files.image3[0].filename : null;
+    const image4File = files.image4 ? files.image4[0].filename : null;
+    
+    let query = 'UPDATE umkm SET name = ?, description = ?, hours = ?, can_deliver = ?, can_qris = ?, whatsapp = ?, mapsLink = ?, category = ?, best_seller = ?';
+    let params = [name, description, hours, canDeliver, canQris, whatsapp, mapsLink, categoryValue, bestSeller];
+    
+    // Add image fields to query if they exist
+    if (imageFile) {
+      query += ', image = ?';
+      params.push(imageFile);
+    }
+    if (image2File) {
+      query += ', image2 = ?';
+      params.push(image2File);
+    }
+    if (image3File) {
+      query += ', image3 = ?';
+      params.push(image3File);
+    }
+    if (image4File) {
+      query += ', image4 = ?';
+      params.push(image4File);
+    }
+    
+    query += ' WHERE id = ?';
+    params.push(req.params.id);
+    
+    const [result] = await db.execute(query, params);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'UMKM tidak ditemukan' });
+    }
+    
+    res.json({ message: 'UMKM berhasil diupdate' });
+  } catch (error) {
+    console.error('Error updating UMKM:', error);
+    res.status(500).json({ message: 'Error updating UMKM' });
   }
-  
-  const { namaUsaha, deskripsi, jamOperasional, dapatDiAntar, dapatBayarQris, whatsapp, mapsLink } = req.body;
-  
-  const gambarFiles = req.files ? req.files.map(file => file.filename) : [];
-  
-  umkmData[umkmIndex] = {
-    ...umkmData[umkmIndex],
-    namaUsaha,
-    deskripsi,
-    jamOperasional,
-    dapatDiAntar: dapatDiAntar === 'true',
-    dapatBayarQris: dapatBayarQris === 'true',
-    gambar: gambarFiles.length > 0 ? gambarFiles : umkmData[umkmIndex].gambar,
-    whatsapp,
-    mapsLink
-  };
-  
-  res.json(umkmData[umkmIndex]);
 });
 
 // Delete UMKM (Admin only)
-app.delete('/api/umkm/:id', authenticateToken, (req, res) => {
-  const umkmIndex = umkmData.findIndex(u => u.id === parseInt(req.params.id));
-  
-  if (umkmIndex === -1) {
-    return res.status(404).json({ message: 'UMKM tidak ditemukan' });
+app.delete('/api/mysql/umkm/:id', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await db.execute('DELETE FROM umkm WHERE id = ?', [req.params.id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'UMKM tidak ditemukan' });
+    }
+    
+    res.json({ message: 'UMKM berhasil dihapus' });
+  } catch (error) {
+    console.error('Error deleting UMKM:', error);
+    res.status(500).json({ message: 'Error deleting UMKM' });
   }
-  
-  umkmData.splice(umkmIndex, 1);
-  res.json({ message: 'UMKM berhasil dihapus' });
 });
 
 // Update banner (Admin only)
-app.put('/api/banner', authenticateToken, upload.single('heroImage'), (req, res) => {
+app.put('/api/mysql/banner', authenticateToken, async (req, res) => {
   try {
-    const { heroTitle, heroDescription, heroButtonText } = req.body;
+    const { title, description, button_text } = req.body;
     
-    bannerData = {
-      heroTitle: heroTitle || bannerData.heroTitle,
-      heroDescription: heroDescription || bannerData.heroDescription,
-      heroButtonText: heroButtonText || bannerData.heroButtonText,
-      heroImage: req.file ? req.file.filename : bannerData.heroImage
-    };
+    // Check if banner exists
+    const [existingBanner] = await db.execute('SELECT * FROM banner LIMIT 1');
     
-    res.json(bannerData);
+    if (existingBanner.length > 0) {
+      // Update existing banner
+      await db.execute(
+        'UPDATE banner SET title = ?, description = ?, button_text = ? WHERE id = ?',
+        [title, description, button_text || 'Lihat Catalog', existingBanner[0].id]
+      );
+    } else {
+      // Insert new banner
+      await db.execute(
+        'INSERT INTO banner (title, description, button_text) VALUES (?, ?, ?)',
+        [title, description, button_text || 'Lihat Catalog']
+      );
+    }
+    
+    res.json({ message: 'Banner berhasil diupdate' });
   } catch (error) {
-    res.status(500).json({ message: 'Error mengupdate banner', error: error.message });
+    console.error('Error updating banner:', error);
+    res.status(500).json({ message: 'Error updating banner' });
   }
 });
 
-// --- UMKM CRUD ---
-app.get('/api/mysql/umkm', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM umkm');
-  res.json(rows);
-});
-
-app.post('/api/mysql/umkm', upload.single('image'), async (req, res) => {
-  const { name, description, hours, can_deliver, can_qris, whatsapp, mapsLink } = req.body;
-  const image = req.file ? req.file.filename : null;
-  
-  // Convert can_deliver and can_qris to 1/0 for database
-  const canDeliver = can_deliver === 'true' || can_deliver === true ? 1 : 0;
-  const canQris = can_qris === 'true' || can_qris === true ? 1 : 0;
-  
-  await db.query(
-    'INSERT INTO umkm (name, description, hours, can_deliver, can_qris, whatsapp, mapsLink, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [name, description, hours, canDeliver, canQris, whatsapp, mapsLink, image]
-  );
-  res.json({ message: 'UMKM added' });
-});
-
-app.put('/api/mysql/umkm/:id', upload.single('image'), async (req, res) => {
-  const { name, description, hours, can_deliver, can_qris, whatsapp, mapsLink } = req.body;
-  const image = req.file ? req.file.filename : null;
-  
-  // Convert can_deliver and can_qris to 1/0 for database
-  const canDeliver = can_deliver === 'true' || can_deliver === true ? 1 : 0;
-  const canQris = can_qris === 'true' || can_qris === true ? 1 : 0;
-  
-  let sql = 'UPDATE umkm SET name=?, description=?, hours=?, can_deliver=?, can_qris=?, whatsapp=?, mapsLink=?';
-  let params = [name, description, hours, canDeliver, canQris, whatsapp, mapsLink];
-  if (image) {
-    sql += ', image=?';
-    params.push(image);
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const connection = await db.getConnection();
+    connection.release();
+    
+    res.json({ 
+      status: 'OK', 
+      message: 'Server is running',
+      database: 'Connected'
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    res.status(500).json({ 
+      status: 'ERROR', 
+      message: 'Server is running but database connection failed',
+      database: 'Disconnected',
+      error: error.message
+    });
   }
-  sql += ' WHERE id=?';
-  params.push(req.params.id);
-  await db.query(sql, params);
-  res.json({ message: 'UMKM updated' });
 });
 
-app.delete('/api/mysql/umkm/:id', async (req, res) => {
-  await db.query('DELETE FROM umkm WHERE id=?', [req.params.id]);
-  res.json({ message: 'UMKM deleted' });
-});
-
-// --- Banner CRUD (hanya 1 banner, id=1) ---
-app.get('/api/mysql/banner', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM banner WHERE id=1');
-  res.json(rows[0]);
-});
-
-app.put('/api/mysql/banner', upload.single('heroImage'), async (req, res) => {
-  const { title, description } = req.body;
-  const heroImage = req.file ? req.file.filename : null;
-  let sql = 'UPDATE banner SET title=?, description=?';
-  let params = [title, description];
-  if (heroImage) {
-    sql += ', heroImage=?';
-    params.push(heroImage);
+// Database test endpoint
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const [rows] = await db.execute('SELECT 1 as test');
+    res.json({ 
+      status: 'OK', 
+      message: 'Database connection successful',
+      test: rows[0]
+    });
+  } catch (error) {
+    console.error('Database test failed:', error);
+    res.status(500).json({ 
+      status: 'ERROR', 
+      message: 'Database connection failed',
+      error: error.message
+    });
   }
-  sql += ' WHERE id=1';
-  await db.query(sql, params);
-  res.json({ message: 'Banner updated' });
-});
-
-// --- Team CRUD ---
-app.get('/api/mysql/team', async (req, res) => {
-  const [rows] = await db.query('SELECT * FROM team');
-  res.json(rows);
-});
-
-app.post('/api/mysql/team', upload.single('image'), async (req, res) => {
-  const { name, role, major } = req.body;
-  const image = req.file ? req.file.filename : null;
-  await db.query(
-    'INSERT INTO team (name, role, image, major) VALUES (?, ?, ?, ?)',
-    [name, role, image, major]
-  );
-  res.json({ message: 'Team member added' });
-});
-
-app.put('/api/mysql/team/:id', upload.single('image'), async (req, res) => {
-  const { name, role, major } = req.body;
-  const image = req.file ? req.file.filename : null;
-  let sql = 'UPDATE team SET name=?, role=?, major=?';
-  let params = [name, role, major];
-  if (image) {
-    sql += ', image=?';
-    params.push(image);
-  }
-  sql += ' WHERE id=?';
-  params.push(req.params.id);
-  await db.query(sql, params);
-  res.json({ message: 'Team member updated' });
-});
-
-app.delete('/api/mysql/team/:id', async (req, res) => {
-  await db.query('DELETE FROM team WHERE id=?', [req.params.id]);
-  res.json({ message: 'Team member deleted' });
-});
-
-// Serve React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server berjalan di port ${PORT}`);
-}); 
+  console.log(`🚀 Server running on port ${PORT}`);
+});

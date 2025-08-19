@@ -1,11 +1,20 @@
 import React, { useState } from 'react';
 import Slider from 'react-slick';
 import { Link } from 'react-router-dom';
-import { FaUsers, FaHandshake, FaChartLine, FaPhone, FaEnvelope, FaMapMarkerAlt, FaStore, FaBars } from 'react-icons/fa';
+import {
+  FaUsers,
+  FaHandshake,
+  FaChartLine,
+  FaPhone,
+  FaEnvelope,
+  FaMapMarkerAlt,
+  FaStore,
+} from 'react-icons/fa';
 import '../styles/About.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
+// ================= TEAM SECTION =================
 const TeamSection = () => {
   const teamMembers = [
     { id: 1, name: "Misyal Soelaiman", role: "Ketua", image: "/img/Mishal.png", major: "Desain Komunikasi Visual" },
@@ -30,18 +39,8 @@ const TeamSection = () => {
     autoplaySpeed: 2000,
     arrows: false,
     responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 2,
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 1,
-        }
-      }
+      { breakpoint: 1024, settings: { slidesToShow: 2 } },
+      { breakpoint: 768, settings: { slidesToShow: 1 } }
     ]
   };
 
@@ -67,12 +66,12 @@ const TeamSection = () => {
           </Slider>
           <div className="carousel-controls">
             <button className="prev-btn" onClick={() => sliderRef.current.slickPrev()}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
             <button className="next-btn" onClick={() => sliderRef.current.slickNext()}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
@@ -83,16 +82,12 @@ const TeamSection = () => {
   );
 };
 
+// ================= ABOUT PAGE =================
 const About = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <div className="about-container">
@@ -107,13 +102,10 @@ const About = () => {
             <nav className="main-nav">
               <Link to="/" className="nav-link">Catalog</Link>
               <Link to="/about" className="nav-link">Tentang</Link>
-              {/* <Link to="/contact" className="nav-link">Kontak</Link> */}
             </nav>
           </div>
           <div className="header-right">
-            <Link to="/admin" className="admin-button">
-              <FaStore />
-            </Link>
+            <Link to="/admin" className="admin-button"><FaStore /></Link>
             <div className="hamburger-menu" onClick={toggleMobileMenu}>
               <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
               <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
@@ -127,10 +119,7 @@ const About = () => {
       <nav className={`mobile-nav ${isMobileMenuOpen ? 'active' : ''}`}>
         <Link to="/" className="nav-link" onClick={closeMobileMenu}>Catalog</Link>
         <Link to="/about" className="nav-link" onClick={closeMobileMenu}>Tentang</Link>
-        {/* <Link to="/contact" className="nav-link" onClick={closeMobileMenu}>Kontak</Link> */}
-        <Link to="/admin" className="admin-button" onClick={closeMobileMenu}>
-          <FaStore />
-        </Link>
+        <Link to="/admin" className="admin-button" onClick={closeMobileMenu}><FaStore /></Link>
       </nav>
 
       {/* Hero Section */}
@@ -141,7 +130,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Vision Mission */}
+      {/* Vision & Mission */}
       <section className="vision-mission">
         <div className="container">
           <div className="vision-card">
@@ -161,23 +150,17 @@ const About = () => {
           <h2>Keuntungan Bergabung</h2>
           <div className="benefits-grid">
             <div className="benefit-card">
-              <div className="benefit-icon">
-                <FaUsers />
-              </div>
+              <div className="benefit-icon"><FaUsers /></div>
               <h3>Jangkauan Luas</h3>
               <p>Produk dan layanan Anda akan terlihat oleh ribuan pengunjung website</p>
             </div>
             <div className="benefit-card">
-              <div className="benefit-icon">
-                <FaHandshake />
-              </div>
+              <div className="benefit-icon"><FaHandshake /></div>
               <h3>Kemudahan Akses</h3>
               <p>Pelanggan dapat dengan mudah menemukan informasi UMKM di sekitar mereka</p>
             </div>
             <div className="benefit-card">
-              <div className="benefit-icon">
-                <FaChartLine />
-              </div>
+              <div className="benefit-icon"><FaChartLine /></div>
               <h3>Pertumbuhan Bisnis</h3>
               <p>Meningkatkan penjualan dan memperluas jaringan pelanggan</p>
             </div>
@@ -211,7 +194,7 @@ const About = () => {
             <div className="step-card">
               <div className="step-number">4</div>
               <h3>Live di Website</h3>
-              <p>UMKM Anda akan langsung terlihat di website dan dapat diakses oleh pelanggan</p>
+              <p>UMKM Anda akan langsung terlihat di website dan dapat diakses oleh banyak pengunjung</p>
             </div>
           </div>
         </div>
@@ -223,23 +206,17 @@ const About = () => {
           <h2>Informasi Kontak</h2>
           <div className="contact-grid">
             <div className="contact-card">
-              <div className="contact-icon">
-                <FaPhone />
-              </div>
+              <div className="contact-icon"><FaPhone /></div>
               <h3>Telepon</h3>
-              <p>+62 812-3456-7890</p>
+              <p>+62 878-4843-3617</p>
             </div>
             <div className="contact-card">
-              <div className="contact-icon">
-                <FaEnvelope />
-              </div>
+              <div className="contact-icon"><FaEnvelope /></div>
               <h3>Email</h3>
               <p>admin@umkmtajurhalang.com</p>
             </div>
             <div className="contact-card">
-              <div className="contact-icon">
-                <FaMapMarkerAlt />
-              </div>
+              <div className="contact-icon"><FaMapMarkerAlt /></div>
               <h3>Alamat</h3>
               <p>Tajur Halang, Bogor, Jawa Barat</p>
             </div>
@@ -269,15 +246,14 @@ const About = () => {
           <div className="footer-links">
             <Link to="/">Catalog</Link>
             <Link to="/about">Tentang</Link>
-            {/* <Link to="/contact">Kontak</Link> */}
             <Link to="/admin">Admin</Link>
           </div>
         </div>
         <div className="footer-bottom">
           <p>&copy; 2025 UMKM Catalog Desa Tajur Halang. Semua hak dilindungi.</p>
           <div className="powered-by">
-            <img src="/img/trilogi.png" alt="Logo Trilogi" style={{height: '35px', marginRight: '10px', verticalAlign: 'middle'}} />
-            <img src="/img/dharmacakra.png" alt="Logo Dharmacakra" style={{height: '35px', marginRight: '10px', verticalAlign: 'middle'}} />
+            <img src="/img/trilogi.png" alt="Logo Trilogi" style={{height: '35px', marginRight: '10px'}} />
+            <img src="/img/dharmacakra.png" alt="Logo Dharmacakra" style={{height: '35px', marginRight: '10px'}} />
             Powered by <strong style={{marginLeft: '8px'}}>KKN 4 Universitas Trilogi</strong>
           </div>
         </div>
@@ -286,4 +262,4 @@ const About = () => {
   );
 };
 
-export default About; 
+export default About;

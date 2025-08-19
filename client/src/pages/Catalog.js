@@ -3,9 +3,105 @@ import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { FaTruck, FaQrcode, FaClock, FaStore, FaSearch, FaShoppingBag, FaWhatsapp, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaTruck, FaQrcode, FaClock, FaStore, FaSearch, FaWhatsapp, FaMapMarkerAlt } from 'react-icons/fa';
 import axios from 'axios';
 import '../styles/Catalog.css';
+
+const UmkmCard = ({ umkm }) => {
+  const images = [umkm.image, umkm.image2, umkm.image3, umkm.image4].filter(img => img);
+
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: images.length > 1,
+    adaptiveHeight: true,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    responsive: [{ breakpoint: 768, settings: { arrows: false } }]
+  };
+
+  return (
+    <div className="umkm-card">
+      {/* Image Slider */}
+      <div className="card-image-container">
+        {images.length > 0 ? (
+          <Slider {...sliderSettings}>
+            {images.map((img, index) => (
+              <div key={index}>
+                <img
+                  src={`/uploads/${img}`}
+                  alt={`${umkm.name} - ${index + 1}`}
+                  className="slider-image"
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Gambar+UMKM'; }}
+                />
+              </div>
+            ))}
+          </Slider>
+        ) : (
+          <img
+            src="https://via.placeholder.com/400x300?text=Gambar+UMKM"
+            alt="Default UMKM"
+            className="slider-image"
+          />
+        )}
+        {umkm.best_seller && <div className="best-seller-label">Best Seller</div>}
+      </div>
+
+      {/* Card Content */}
+      <div className="card-content">
+        <h3 className="umkm-name">{umkm.name}</h3>
+        <p className="umkm-description">{umkm.description}</p>
+        <div className="umkm-details">
+          <div className="detail-item">
+            <FaClock className="detail-icon" />
+            <span>{umkm.hours}</span>
+          </div>
+          <div className="umkm-features-modern">
+            {umkm.can_deliver && (
+              <span className="feature-badge-modern">
+                <FaTruck className="feature-icon" /> Dapat Diantar
+              </span>
+            )}
+            {umkm.can_qris && (
+              <span className="feature-badge-modern">
+                <FaQrcode className="feature-icon" /> Bayar QRIS
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="umkm-actions-modern">
+        {umkm.whatsapp && (
+          <a
+            href={`https://wa.me/${umkm.whatsapp}`}
+            className="wa-icon-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Chat WhatsApp"
+          >
+            <FaWhatsapp />
+          </a>
+        )}
+        {umkm.mapsLink && (
+          <a
+            href={umkm.mapsLink}
+            className="maps-icon-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Dapatkan Arah"
+          >
+            <FaMapMarkerAlt />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Catalog = () => {
   const [umkmList, setUmkmList] = useState([]);
@@ -20,6 +116,7 @@ const Catalog = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 9;
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
 
   useEffect(() => {
     fetchData();
@@ -31,17 +128,15 @@ const Catalog = () => {
         axios.get('/api/mysql/umkm'),
         axios.get('/api/mysql/banner')
       ]);
-      
-      // Convert can_deliver and can_qris to boolean
+
       const processedUmkmList = umkmResponse.data.map(umkm => ({
         ...umkm,
         can_deliver: Boolean(Number(umkm.can_deliver)),
-        can_qris: Boolean(Number(umkm.can_qris))
+        can_qris: Boolean(Number(umkm.can_qris)),
+        best_seller: Boolean(Number(umkm.best_seller)),
       }));
-      
+
       setUmkmList(processedUmkmList);
-      
-      // Map banner data fields correctly
       setBannerData({
         heroTitle: bannerResponse.data.title || "Jelajahi UMKM Tajur Halang",
         heroDescription: bannerResponse.data.description || "Temukan berbagai usaha mikro, kecil, dan menengah yang berkualitas di sekitar Anda",
@@ -54,69 +149,32 @@ const Catalog = () => {
     }
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const closeDropdown = () => {
-    setIsDropdownOpen(false);
-  };
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  const closeDropdown = () => setIsDropdownOpen(false);
 
   const scrollToCatalog = () => {
     const catalogSection = document.getElementById('catalog');
     if (catalogSection) {
-      catalogSection.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
+      catalogSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    // Scroll to top of catalog section when changing page
     const catalogSection = document.getElementById('catalog');
     if (catalogSection) {
-      catalogSection.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
+      catalogSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: true,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          arrows: false
-        }
-      }
-    ]
-  };
-
   const filteredUmkmList = umkmList.filter(umkm =>
-    (umkm.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (umkm.description || '').toLowerCase().includes(search.toLowerCase())
+    (categoryFilter === 'ALL' || umkm.category === categoryFilter) &&
+    ((umkm.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (umkm.description || '').toLowerCase().includes(search.toLowerCase()))
   );
 
-  // Pagination logic
   const indexOfLastCard = currentPage * cardsPerPage;
   const indexOfFirstCard = indexOfLastCard - cardsPerPage;
   const currentCards = filteredUmkmList.slice(indexOfFirstCard, indexOfLastCard);
@@ -131,8 +189,42 @@ const Catalog = () => {
     );
   }
 
+  // ✅ JSON-LD Schema untuk SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "UMKM Desa Tajur Halang",
+    "image": "https://tajurhalangumkm.com/logo.png",
+    "url": "https://tajurhalangumkm.com",
+    "telephone": "+628123456789", 
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Tajur Halang",
+      "addressLocality": "Bogor",
+      "addressRegion": "Jawa Barat",
+      "postalCode": "16320",
+      "addressCountry": "ID"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": -6.4673,
+      "longitude": 106.7931
+    },
+    "description": "Katalog UMKM Desa Tajur Halang - Temukan usaha mikro, kecil, dan menengah terbaik di Tajur Halang.",
+    "openingHours": "Mo-Su 08:00-21:00",
+    "sameAs": [
+      "https://facebook.com/tajurhalangumkm",
+      "https://instagram.com/tajurhalangumkm"
+    ]
+  };
+
   return (
     <div className="catalog-container">
+      {/* Schema.org JSON-LD */}
+      <script type="application/ld+json">
+        {JSON.stringify(jsonLd)}
+      </script>
+
       {/* Header */}
       <header className="main-header">
         <div className="header-content">
@@ -142,10 +234,12 @@ const Catalog = () => {
               <p className="brand-tagline">Ekonomi Kuat, Masyarakat Sejahtera, Tajur Halang Maju!</p>
             </div>
             <nav className="main-nav">
-              <div className="nav-item" onMouseEnter={() => setIsDropdownOpen(true)} onMouseLeave={() => setIsDropdownOpen(false)}>
-                <span className="nav-link" onClick={toggleDropdown}>
-                  Menu
-                </span>
+              <div 
+                className="nav-item"
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)}
+              >
+                <span className="nav-link" onClick={toggleDropdown}>Menu</span>
                 <div className={`nav-dropdown ${isDropdownOpen ? 'active' : ''}`}>
                   <Link to="/" onClick={closeDropdown}>Catalog</Link>
                   <Link to="/about" onClick={closeDropdown}>Tentang</Link>
@@ -154,9 +248,7 @@ const Catalog = () => {
             </nav>
           </div>
           <div className="header-right">
-            <Link to="/admin" className="admin-button">
-              <FaStore />
-            </Link>
+            <Link to="/admin" className="admin-button"><FaStore /></Link>
             <div className="hamburger-menu" onClick={toggleMobileMenu}>
               <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
               <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
@@ -164,29 +256,21 @@ const Catalog = () => {
             </div>
           </div>
         </div>
+        
+        <nav className={`mobile-nav ${isMobileMenuOpen ? 'active' : ''}`}>
+          <Link to="/" className="nav-link" onClick={closeMobileMenu}>Catalog</Link>
+          <Link to="/about" className="nav-link" onClick={closeMobileMenu}>Tentang</Link>
+          <Link to="/admin" className="admin-button" onClick={closeMobileMenu}><FaStore /> Admin</Link>
+        </nav>
       </header>
-
-      {/* Mobile Navigation */}
-      <nav className={`mobile-nav ${isMobileMenuOpen ? 'active' : ''}`}>
-        <Link to="/" className="nav-link" onClick={closeMobileMenu}>Catalog</Link>
-        <Link to="/about" className="nav-link" onClick={closeMobileMenu}>Tentang</Link>
-        {/* <Link to="/contact" className="nav-link" onClick={closeMobileMenu}>Kontak</Link> */}
-        <Link to="/admin" className="admin-button" onClick={closeMobileMenu}>
-          <FaStore />
-        </Link>
-      </nav>
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-background">
-          <div className="hero-overlay"></div>
-        </div>
+        <div className="hero-background"><div className="hero-overlay"></div></div>
         <div className="hero-content">
           <div className="hero-badge">UMKM CATALOG</div>
           <h1 className="hero-title">{bannerData.heroTitle}</h1>
-          <p className="hero-description">
-            {bannerData.heroDescription}
-          </p>
+          <p className="hero-description">{bannerData.heroDescription}</p>
           <button className="hero-cta" onClick={scrollToCatalog}>Lihat Catalog</button>
         </div>
       </section>
@@ -195,7 +279,7 @@ const Catalog = () => {
       <section id="catalog" className="catalog-section">
         <div className="section-header">
           <h2>Catalog UMKM</h2>
-          <p>Berbagai usaha yang dapat Anda kunjungi</p>
+          <p>Berbagai usaha yang dapat Anda kunjungi di Desa Tajur Halang!</p>
           <div className="search-bar">
             <FaSearch className="search-icon" />
             <input
@@ -206,84 +290,23 @@ const Catalog = () => {
               className="search-input"
             />
           </div>
+          <div className="category-filter-bar">
+            <button className={`category-btn${categoryFilter === 'ALL' ? ' active' : ''}`} onClick={() => setCategoryFilter('ALL')}>Semua</button>
+            <button className={`category-btn${categoryFilter === 'UMKM' ? ' active' : ''}`} onClick={() => setCategoryFilter('UMKM')}>UMKM</button>
+            <button className={`category-btn${categoryFilter === 'IKM' ? ' active' : ''}`} onClick={() => setCategoryFilter('IKM')}>IKM</button>
+          </div>
         </div>
 
         <div className="umkm-grid">
-          {currentCards.map((umkm) => (
-            <div key={umkm.id} className="umkm-card">
-              {/* Image Slider */}
-              <div className="card-image-container">
-                {umkm.image ? (
-                  <img src={`/uploads/${umkm.image}`} alt={umkm.name} />
-                ) : (
-                  <img src="https://via.placeholder.com/400x300?text=Gambar+UMKM" alt="Default UMKM" />
-                )}
-              </div>
-
-              {/* Card Content */}
-              <div className="card-content">
-                <h3 className="umkm-name">{umkm.name}</h3>
-                <p className="umkm-description">{umkm.description}</p>
-                <div className="umkm-details">
-                  <div className="detail-item">
-                    <FaClock className="detail-icon" />
-                    <span>{umkm.hours}</span>
-                  </div>
-                  <div className="umkm-features-modern">
-                    {umkm.can_deliver && (
-                      <span className="feature-badge-modern">
-                        <FaTruck className="feature-icon" /> Dapat Diantar
-                      </span>
-                    )}
-                    {umkm.can_qris && (
-                      <span className="feature-badge-modern">
-                        <FaQrcode className="feature-icon" /> Bayar QRIS
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              {/* Card Actions: WhatsApp and Maps as small icon buttons */}
-              <div className="umkm-actions-modern">
-                {umkm.whatsapp && (
-                  <a
-                    href={`https://wa.me/${umkm.whatsapp}`}
-                    className="wa-icon-btn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Chat WhatsApp"
-                  >
-                    <FaWhatsapp />
-                  </a>
-                )}
-                {umkm.mapsLink && (
-                  <a
-                    href={umkm.mapsLink}
-                    className="maps-icon-btn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Dapatkan Arah"
-                  >
-                    <FaMapMarkerAlt />
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
+          {currentCards.map((umkm) => (<UmkmCard key={umkm.id} umkm={umkm} />))}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="pagination-container">
             <div className="pagination">
-              <button 
-                className="pagination-btn"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
+              <button className="pagination-btn" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
                 &laquo; Sebelumnya
               </button>
-              
               <div className="page-numbers">
                 {Array.from({ length: totalPages }, (_, index) => index + 1).map(pageNumber => (
                   <button
@@ -295,12 +318,7 @@ const Catalog = () => {
                   </button>
                 ))}
               </div>
-              
-              <button 
-                className="pagination-btn"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
+              <button className="pagination-btn" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
                 Selanjutnya &raquo;
               </button>
             </div>
@@ -318,7 +336,6 @@ const Catalog = () => {
           <div className="footer-links">
             <Link to="/">Catalog</Link>
             <Link to="/about">Tentang</Link>
-            {/* <Link to="/contact">Kontak</Link> */}
             <Link to="/admin">Admin</Link>
           </div>
         </div>
@@ -335,4 +352,4 @@ const Catalog = () => {
   );
 };
 
-export default Catalog; 
+export default Catalog;
