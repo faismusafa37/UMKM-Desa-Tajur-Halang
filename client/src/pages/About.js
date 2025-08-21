@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Slider from 'react-slick';
 import { Link } from 'react-router-dom';
 import {
@@ -47,30 +48,35 @@ const TeamSection = () => {
   return (
     <section className="team-section">
       <div className="container">
-        <h2>Tim Pengembang</h2>
-        <p className="subtitle">Dibuat dengan dedikasi oleh mahasiswa KKN 4 Universitas Trilogi</p>
+        <h2>Tim Pengembang E-Catalog UMKM Desa Tajur Halang</h2>
+        <p className="subtitle">Dibuat dengan dedikasi oleh mahasiswa KKN 4 Universitas Trilogi untuk memajukan UMKM di Desa Tajur Halang, Bogor</p>
         <div className="team-carousel-wrapper">
           <Slider {...sliderSettings} ref={sliderRef} className="team-slider">
             {teamMembers.map((member) => (
-              <div key={member.id} className="team-card">
+              <div key={member.id} className="team-card" itemScope itemType="http://schema.org/Person">
                 <div className="team-image">
-                  <img src={member.image} alt={member.name} />
+                  <img 
+                    src={member.image} 
+                    alt={`Foto ${member.name} - ${member.role} UMKM Tajur Halang`} 
+                    itemProp="image"
+                    loading="lazy"
+                  />
                 </div>
                 <div className="team-info">
-                  <h3>{member.name}</h3>
-                  <p className="team-role">{member.role}</p>
-                  <p className="team-description">{member.major}</p>
+                  <h3 itemProp="name">{member.name}</h3>
+                  <p className="team-role" itemProp="jobTitle">{member.role}</p>
+                  <p className="team-description" itemProp="description">{member.major}</p>
                 </div>
               </div>
             ))}
           </Slider>
           <div className="carousel-controls">
-            <button className="prev-btn" onClick={() => sliderRef.current.slickPrev()}>
+            <button className="prev-btn" onClick={() => sliderRef.current.slickPrev()} aria-label="Previous team member">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <button className="next-btn" onClick={() => sliderRef.current.slickNext()}>
+            <button className="next-btn" onClick={() => sliderRef.current.slickNext()} aria-label="Next team member">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -90,56 +96,114 @@ const About = () => {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <div className="about-container">
+    <div className="about-container" itemScope itemType="http://schema.org/AboutPage">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>Tentang Kami - UMKM Desa Tajur Halang | Platform Digital UMKM Bogor</title>
+        <meta 
+          name="description" 
+          content="Platform digital untuk mendukung UMKM di Desa Tajur Halang, Bogor. Temukan visi, misi, tim pengembang, dan cara bergabung dengan katalog UMKM kami." 
+        />
+        <meta name="keywords" content="UMKM Tajur Halang, Katalog UMKM Bogor, Bisnis Lokal Bogor, Wirausaha Desa, Ekonomi Kreatif Bogor" />
+        <meta property="og:title" content="Tentang UMKM Desa Tajur Halang - Katalog Digital UMKM Bogor" />
+        <meta property="og:description" content="Platform digital untuk mempromosikan UMKM di Desa Tajur Halang, Bogor. Dukung ekonomi lokal dengan membeli produk wirausaha desa." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://umkmtajurhalang.com/about" />
+        <meta property="og:image" content="/img/umkm-tajur-halang-og.jpg" />
+        <meta property="og:site_name" content="UMKM Desa Tajur Halang" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://umkmtajurhalang.com/about" />
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "UMKM Desa Tajur Halang",
+              "url": "https://umkmtajurhalang.com",
+              "logo": "https://umkmtajurhalang.com/img/logo.png",
+              "description": "Platform digital untuk mempromosikan usaha mikro, kecil, dan menengah di Desa Tajur Halang, Bogor",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Bogor",
+                "addressRegion": "Jawa Barat",
+                "addressCountry": "Indonesia"
+              },
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+6287848433617",
+                "contactType": "customer service",
+                "email": "admin@umkmtajurhalang.com",
+                "areaServed": "Indonesia"
+              }
+            }
+          `}
+        </script>
+      </Helmet>
+
       {/* Header */}
-      <header className="main-header">
-        <div className="header-content">
-          <div className="header-left">
-            <div className="brand">
-              <h1 className="brand-name">UMKM DESA TAJUR HALANG</h1>
-              <p className="brand-tagline">Ekonomi Kuat, Masyarakat Sejahtera, Tajur Halang Maju!</p>
+      {!isMobileMenuOpen && (
+        <header className="main-header">
+          <div className="header-content">
+            <div className="header-left">
+              <div className="brand">
+                <h1 className="brand-name">UMKM DESA TAJUR HALANG</h1>
+                <p className="brand-tagline">Ekonomi Kuat, Masyarakat Sejahtera, Tajur Halang Maju!</p>
+              </div>
+              <nav className="main-nav" aria-label="Main navigation">
+                <Link to="/" className="nav-link">Catalog</Link>
+                <Link to="/about" className="nav-link">Tentang</Link>
+              </nav>
             </div>
-            <nav className="main-nav">
-              <Link to="/" className="nav-link">Catalog</Link>
-              <Link to="/about" className="nav-link">Tentang</Link>
-            </nav>
-          </div>
-          <div className="header-right">
-            <Link to="/admin" className="admin-button"><FaStore /></Link>
-            <div className="hamburger-menu" onClick={toggleMobileMenu}>
-              <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
-              <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
-              <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
+            <div className="header-right">
+              <Link to="/admin" className="admin-button" aria-label="Admin dashboard"><FaStore /></Link>
+              <button 
+                className="hamburger-menu" 
+                onClick={toggleMobileMenu}
+                aria-label="Toggle mobile menu"
+                aria-expanded={isMobileMenuOpen}
+              >
+                <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
+                <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
+                <div className={`hamburger-line ${isMobileMenuOpen ? 'active' : ''}`}></div>
+              </button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Mobile Navigation */}
-      <nav className={`mobile-nav ${isMobileMenuOpen ? 'active' : ''}`}>
-        <Link to="/" className="nav-link" onClick={closeMobileMenu}>Catalog</Link>
-        <Link to="/about" className="nav-link" onClick={closeMobileMenu}>Tentang</Link>
-        <Link to="/admin" className="admin-button" onClick={closeMobileMenu}><FaStore /></Link>
-      </nav>
+      {isMobileMenuOpen && (
+        <nav className="mobile-nav active" aria-label="Mobile navigation">
+          <button className="close-btn" onClick={closeMobileMenu} aria-label="Close mobile menu">✕</button>
+          <Link to="/" className="nav-link" onClick={closeMobileMenu}>Catalog</Link>
+          <Link to="/about" className="nav-link" onClick={closeMobileMenu}>Tentang</Link>
+          <Link to="/admin" className="admin-button" onClick={closeMobileMenu} aria-label="Admin dashboard"><FaStore /></Link>
+        </nav>
+      )}
 
       {/* Hero Section */}
       <section className="about-hero">
         <div className="hero-content">
-          <h1>Tentang UMKM Desa Tajur Halang</h1>
-          <p>Platform digital untuk mendukung dan mempromosikan usaha mikro, kecil, dan menengah di Tajur Halang</p>
+          <h1 itemProp="headline">Tentang UMKM Desa Tajur Halang</h1>
+          <p itemProp="description">Platform digital untuk mendukung dan mempromosikan usaha mikro, kecil, dan menengah di Desa Tajur Halang, Bogor</p>
         </div>
       </section>
 
       {/* Vision & Mission */}
       <section className="vision-mission">
         <div className="container">
-          <div className="vision-card">
-            <h2>Visi</h2>
-            <p>Menjadi platform digital terdepan dalam mendukung pertumbuhan dan keberlanjutan UMKM di Tajur Halang</p>
+          <div className="vision-card" itemScope itemType="http://schema.org/Organization">
+            <h2>Visi UMKM Tajur Halang</h2>
+            <p itemProp="slogan">Menjadi platform digital terdepan dalam mendukung pertumbuhan dan keberlanjutan UMKM di Desa Tajur Halang, Bogor</p>
           </div>
           <div className="mission-card">
-            <h2>Misi</h2>
-            <p>Memberikan akses digital yang mudah dan efektif bagi UMKM untuk mempromosikan produk dan layanan mereka</p>
+            <h2>Misi Kami</h2>
+            <ul itemProp="description">
+              <li>Memberikan akses digital yang mudah bagi UMKM lokal</li>
+              <li>Mempromosikan produk dan layanan wirausaha desa</li>
+              <li>Meningkatkan penjualan dan perluasan pasar</li>
+              <li>Membangun komunitas UMKM yang solid di Tajur Halang</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -147,22 +211,22 @@ const About = () => {
       {/* Benefits */}
       <section className="benefits">
         <div className="container">
-          <h2>Keuntungan Bergabung</h2>
+          <h2>Keuntungan Bergabung dengan Katalog UMKM Desa Tajur Halang</h2>
           <div className="benefits-grid">
-            <div className="benefit-card">
+            <div className="benefit-card" itemScope itemType="http://schema.org/Service">
               <div className="benefit-icon"><FaUsers /></div>
-              <h3>Jangkauan Luas</h3>
-              <p>Produk dan layanan Anda akan terlihat oleh ribuan pengunjung website</p>
+              <h3 itemProp="name">Jangkauan Luas</h3>
+              <p itemProp="description">Produk UMKM Anda akan terlihat oleh ribuan pengunjung website setiap bulannya</p>
             </div>
-            <div className="benefit-card">
+            <div className="benefit-card" itemScope itemType="http://schema.org/Service">
               <div className="benefit-icon"><FaHandshake /></div>
-              <h3>Kemudahan Akses</h3>
-              <p>Pelanggan dapat dengan mudah menemukan informasi UMKM di sekitar mereka</p>
+              <h3 itemProp="name">Kemudahan Akses</h3>
+              <p itemProp="description">Pelanggan dapat dengan mudah menemukan informasi UMKM di sekitar Desa Tajur Halang</p>
             </div>
-            <div className="benefit-card">
+            <div className="benefit-card" itemScope itemType="http://schema.org/Service">
               <div className="benefit-icon"><FaChartLine /></div>
-              <h3>Pertumbuhan Bisnis</h3>
-              <p>Meningkatkan penjualan dan memperluas jaringan pelanggan</p>
+              <h3 itemProp="name">Pertumbuhan Bisnis</h3>
+              <p itemProp="description">Tingkatkan penjualan hingga 40% dengan bergabung dalam katalog digital kami</p>
             </div>
           </div>
         </div>
@@ -174,51 +238,51 @@ const About = () => {
       {/* How to Join */}
       <section className="how-to-join">
         <div className="container">
-          <h2>Cara Bergabung</h2>
+          <h2>Cara Bergabung dengan UMKM Tajur Halang</h2>
           <div className="steps-grid">
             <div className="step-card">
               <div className="step-number">1</div>
-              <h3>Hubungi Admin</h3>
-              <p>Kontak admin melalui WhatsApp atau email untuk mendaftarkan UMKM Anda</p>
+              <h3>Hubungi Admin UMKM</h3>
+              <p>Kontak admin melalui WhatsApp di +62 878-4843-3617</p>
             </div>
             <div className="step-card">
               <div className="step-number">2</div>
-              <h3>Siapkan Data</h3>
-              <p>Siapkan informasi lengkap UMKM termasuk foto produk dan jam operasional</p>
+              <h3>Siapkan Data UMKM</h3>
+              <p>Siapkan informasi lengkap termasuk foto produk, deskripsi, dan jam operasional</p>
             </div>
             <div className="step-card">
               <div className="step-number">3</div>
-              <h3>Verifikasi</h3>
-              <p>Admin akan memverifikasi data dan menambahkan UMKM ke dalam catalog</p>
+              <h3>Proses Verifikasi</h3>
+              <p>Admin akan memverifikasi data UMKM</p>
             </div>
             <div className="step-card">
               <div className="step-number">4</div>
-              <h3>Live di Website</h3>
-              <p>UMKM Anda akan langsung terlihat di website dan dapat diakses oleh banyak pengunjung</p>
+              <h3>UMKM Online</h3>
+              <p>Setelah diverifikasi, UMKM Anda akan langsung muncul di katalog digital kami</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Contact Info */}
-      <section className="contact-info">
+      <section className="contact-info" itemScope itemType="http://schema.org/LocalBusiness">
         <div className="container">
-          <h2>Informasi Kontak</h2>
+          <h2>Kontak UMKM Desa Tajur Halang</h2>
           <div className="contact-grid">
-            <div className="contact-card">
+            <div className="contact-card" itemProp="contactPoint" itemScope itemType="http://schema.org/ContactPoint">
               <div className="contact-icon"><FaPhone /></div>
-              <h3>Telepon</h3>
-              <p>+62 878-4843-3617</p>
+              <h3 itemProp="name">Telepon/WhatsApp</h3>
+              <p itemProp="telephone"><a href="tel:+6287848433617">+62 878-4843-3617</a></p>
             </div>
-            <div className="contact-card">
+            <div className="contact-card" itemProp="contactPoint" itemScope itemType="http://schema.org/ContactPoint">
               <div className="contact-icon"><FaEnvelope /></div>
-              <h3>Email</h3>
-              <p>admin@umkmtajurhalang.com</p>
+              <h3 itemProp="name">Email</h3>
+              <p itemProp="email"><a href="mailto:admin@umkmtajurhalang.com">admin@umkmtajurhalang.com</a></p>
             </div>
-            <div className="contact-card">
+            <div className="contact-card" itemProp="address" itemScope itemType="http://schema.org/PostalAddress">
               <div className="contact-icon"><FaMapMarkerAlt /></div>
-              <h3>Alamat</h3>
-              <p>Tajur Halang, Bogor, Jawa Barat</p>
+              <h3 itemProp="name">Lokasi UMKM</h3>
+              <p itemProp="addressLocality">Tajur Halang, Kabupaten Bogor, Jawa Barat</p>
             </div>
           </div>
         </div>
@@ -227,11 +291,11 @@ const About = () => {
       {/* CTA Section */}
       <section className="cta-section">
         <div className="container">
-          <h2>Siap Bergabung?</h2>
-          <p>Daftarkan UMKM Anda sekarang dan mulai berkembang bersama kami</p>
+          <h2>Siap Bergabung dengan UMKM Tajur Halang?</h2>
+          <p>Daftarkan bisnis Anda sekarang dan manfaatkan platform digital untuk mengembangkan usaha di Desa Tajur Halang</p>
           <div className="cta-buttons">
-            <Link to="/contact" className="cta-button primary">Hubungi Kami</Link>
-            <Link to="/" className="cta-button secondary">Lihat Catalog</Link>
+            <Link to="/contact" className="cta-button primary">Hubungi Admin Sekarang</Link>
+            <Link to="/" className="cta-button secondary">Lihat Katalog UMKM</Link>
           </div>
         </div>
       </section>
@@ -239,22 +303,34 @@ const About = () => {
       {/* Footer */}
       <footer className="main-footer">
         <div className="footer-content">
-          <div className="footer-brand">
-            <h3>UMKM DESA TAJUR HALANG</h3>
-            <p>Ekonomi Kuat, Masyarakat Sejahtera, Tajur Halang Maju!</p>
+          <div className="footer-brand" itemScope itemType="http://schema.org/Organization">
+            <h3 itemProp="name">UMKM DESA TAJUR HALANG</h3>
+            <p itemProp="description">Ekonomi Kuat, Masyarakat Sejahtera, Tajur Halang Maju!</p>
           </div>
           <div className="footer-links">
-            <Link to="/">Catalog</Link>
-            <Link to="/about">Tentang</Link>
-            <Link to="/admin">Admin</Link>
+            <Link to="/" itemProp="url">Catalog</Link>
+            <Link to="/about" itemProp="url">Tentang</Link>
+            <Link to="/admin" itemProp="url">Admin</Link>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2025 UMKM Catalog Desa Tajur Halang. Semua hak dilindungi.</p>
+          <p>&copy; 2025 Katalog UMKM Desa Tajur Halang. Semua hak dilindungi.</p>
           <div className="powered-by">
-            <img src="/img/trilogi.png" alt="Logo Trilogi" style={{height: '35px', marginRight: '10px'}} />
-            <img src="/img/dharmacakra.png" alt="Logo Dharmacakra" style={{height: '35px', marginRight: '10px'}} />
-            Powered by <strong style={{marginLeft: '8px'}}>KKN 4 Universitas Trilogi</strong>
+            <img 
+              src="/img/trilogi.png" 
+              alt="Logo Universitas Trilogi" 
+              width="35" 
+              height="35"
+              loading="lazy"
+            />
+            <img 
+              src="/img/dharmacakra.png" 
+              alt="Logo Dharmacakra KKN 4" 
+              width="35" 
+              height="35"
+              loading="lazy"
+            />
+            <span>Dikembangkan oleh <strong>KKN 4 Universitas Trilogi</strong></span>
           </div>
         </div>
       </footer>

@@ -25,9 +25,32 @@
   right: 0;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  z-index: 1000;
+  z-index: 100;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 1rem;
+}
+.main-nav {
+  display: none; /* default tertutup */
+}
+
+.mobile-nav.open {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;       /* mulai dari atas, menutupi header */
+  left: 0;
+  right: 0;
+  bottom: 0;    /* full layar */
+  background: #fff;
+  padding: 100px 20px 20px;
+  gap: 20px;
+  z-index: 9999; /* lebih tinggi dari header */
+  overflow-y: auto;
+}
+
+.main-header.hidden,
+.header-content.hidden {
+  display: none !important;
 }
 
 .header-content {
@@ -218,32 +241,39 @@
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
+/* Default mobile nav: sembunyi */
 .mobile-nav {
   display: none;
-  position: fixed;
-  top: 80px;
+  flex-direction: column;
+  position: absolute;
+  top: 100%; /* keluar tepat di bawah header */
   left: 0;
   right: 0;
-  background: white;
-  padding: 2rem;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-  transform: translateY(-100%);
-  transition: all 0.3s ease;
-  z-index: 999;
-  border-radius: 0 0 20px 20px;
+  background: #fff;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 2000; /* di atas main-header */
 }
 
+/* Saat hamburger diklik */
 .mobile-nav.active {
-  transform: translateY(0);
+  display: flex;
 }
 
 .mobile-nav .nav-link {
-  display: block;
   padding: 1rem 0;
-  border-bottom: 1px solid #f0f0f0;
+  text-align: center;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 500;
+  color: #333;
+  transition: color 0.3s ease;
 }
+
+.mobile-nav .nav-link:hover {
+  color: var(--google-blue);
+}
+
 
 .mobile-nav .admin-button {
   margin-top: 1rem;
